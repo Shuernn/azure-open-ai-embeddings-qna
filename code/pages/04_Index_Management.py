@@ -1,10 +1,15 @@
 import streamlit as st
 import os
 import traceback
+import redis 
 from utilities.helper import LLMHelper
+from redis import Redis
 
-def delete_embedding():
-    llm_helper.vector_store.delete_keys([f"doc:{st.session_state['embedding_to_drop']}"])
+def delete_embedding(key):
+   redis_conn = Redis(host="aidna-redis.southeastasia.azurecontainer.io", port=int('6379'), password='redis')
+
+   # llm_helper.vector_store.delete_keys([f"doc:{st.session_state['embedding_to_drop']}"])
+   redis_conn.ft("embeddings").delete_document(key)
 
 def delete_file():
     embeddings_to_delete = data[data.filename == st.session_state['file_to_drop']].key.tolist()
@@ -39,11 +44,11 @@ try:
         st.text("")
         col1, col2, col3, col4 = st.columns([3,2,2,1])
         with col1:
-            st.selectbox("Embedding id to delete", data.get('key',[]), key="embedding_to_drop")
+           key_to_delete = st.selectbox("Embedding id to delete", data.get('key',[]), key="embedding_to_drop")
         with col2:
             st.text("")
             st.text("")
-            st.button("Delete embedding", on_click=delete_embedding)
+            st.button("Delete embedding", on_click=delete_embedding(key_to_delete))
         with col3:
             st.selectbox("File name to delete", set(data.get('filename',[])), key="file_to_drop")
         with col4:
